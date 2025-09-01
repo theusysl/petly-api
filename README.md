@@ -12,35 +12,35 @@
 
 ## 2. Configuração Inicial
 
-1. Clone o repositório:
+Clone o repositório:
 
 ```bash
 git clone <repo_url>
 cd petly-api
+```
 Instale dependências:
-
-bash
-Copiar código
+```bash
 npm install
+```
 Crie .env na raiz do projeto:
 
-ini
-Copiar código
+```ini
 DATABASE_URL="postgresql://usuario:senha@localhost:5432/petly"
 JWT_SECRET="chave_super_secreta"
 PORT=4000
+```
 Inicialize Prisma:
 
-bash
-Copiar código
+```bash
 npx prisma init
+```
+
 Isso cria prisma/schema.prisma e aponta para o banco definido em DATABASE_URL.
 
-3. Configuração TypeScript / ESM
-No tsconfig.json:
+## 3. Configuração TypeScript / ESM
 
-json
-Copiar código
+No tsconfig.json:
+```json
 {
   "compilerOptions": {
     "target": "ES2020",
@@ -54,10 +54,10 @@ Copiar código
     "skipLibCheck": true
   }
 }
-No package.json:
+```
 
-json
-Copiar código
+No package.json:
+```json
 {
   "type": "module",
   "scripts": {
@@ -65,8 +65,10 @@ Copiar código
     "start": "node dist/index.js"
   }
 }
-4. Estrutura de Pastas Recomendada
-pgsql
+```
+
+## 4. Estrutura de Pastas Recomendada
+```pgsql
 Copiar código
 petly-api/
 ├─ prisma/
@@ -82,11 +84,12 @@ petly-api/
 ├─ package.json
 ├─ tsconfig.json
 └─ .env
-5. Inicializando o Servidor
+```
+
+## 5. Inicializando o Servidor
 src/index.ts mínimo para teste:
 
-ts
-Copiar código
+```ts
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
@@ -102,21 +105,24 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+```
+
 Testar:
 
-bash
-Copiar código
+```bash
 npm run dev
+```
+
 Abrir no navegador:
 
-arduino
-Copiar código
+```arduino
 http://localhost:4000/
-6. Configuração Prisma
+```
+
+## 6. Configuração Prisma
 Defina o modelo inicial no prisma/schema.prisma:
 
-prisma
-Copiar código
+```prisma
 model User {
   id       Int    @id @default(autoincrement())
   name     String
@@ -124,30 +130,34 @@ model User {
   password String
   role     String @default("USER")
 }
+```
+
 Gere o Prisma Client:
 
-bash
-Copiar código
+```bash
 npx prisma generate
+```
+
 Rode a migration inicial:
 
-bash
-Copiar código
+```bash
 npx prisma migrate dev --name init
-7. Importando Prisma no ESM
-ts
-Copiar código
+```
+
+## 7. Importando Prisma no ESM
+```ts
 import pkg from "@prisma/client";
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
 export default prisma;
+```
+
 ⚠️ Sublinhados no VSCode podem aparecer, mas não quebram o runtime.
 
-8. Criando Rotas e Controllers
+## 8. Criando Rotas e Controllers
 src/routes/userRoutes.ts:
 
-ts
-Copiar código
+```ts
 import { Router } from "express";
 import { registerUser, loginUser } from "../controllers/userController.js";
 
@@ -157,10 +167,11 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 export default router;
+```
+
 src/controllers/userController.ts:
 
-ts
-Copiar código
+```ts
 import pkg from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -190,39 +201,41 @@ export const loginUser = async (req, res) => {
   const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
   res.json({ token });
 };
-9. Próximos Passos
-Testar endpoints com Postman ou Insomnia.
+```
 
-Criar CRUD de Animais, Adoções, Denúncias usando o mesmo padrão.
+## 9. Próximos Passos
+- Testar endpoints com Postman ou Insomnia.
 
-Adicionar middlewares de autenticação com JWT.
+- Criar CRUD de Animais, Adoções, Denúncias usando o mesmo padrão.
 
-Implementar tratamento de erros centralizado.
+- Adicionar middlewares de autenticação com JWT.
 
-Conectar ao frontend Next.js via fetch/axios.
+- Implementar tratamento de erros centralizado.
 
-10. Dicas Gerais
+- Conectar ao frontend Next.js via fetch/axios.
+
+## 10. Dicas Gerais
 Sempre que mudar schema.prisma:
 
-bash
-Copiar código
+```bash
 npx prisma generate
 npx prisma migrate dev --name <nome_migration>
+```
+
 Se mudar de máquina, rode sempre:
 
-bash
-Copiar código
+```bash
 npm install
 npx prisma generate
+```
+
 Para ESM + TS, use sempre:
 
-ts
-Copiar código
+```ts
 import pkg from "@prisma/client";
 const { PrismaClient } = pkg;
-Console.log de objetos do Prisma podem aparecer como [Object: null prototype] → normal.
+```
 
-yaml
-Copiar código
+Console.log de objetos do Prisma podem aparecer como [Object: null prototype] → normal.
 
 ---
