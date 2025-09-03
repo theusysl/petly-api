@@ -2,9 +2,9 @@
 
 ## 1. Pré-requisitos
 
-- Node.js >= 18  
+- [Node.js >= 18](https://nodejs.org/pt/download)  
 - npm  
-- PostgreSQL (ou outro banco que decidir)  
+- [PostgreSQL](https://www.postgresql.org/download/windows/)
 - VSCode ou outro editor de código  
 - Prisma (já instalado via npm)
 
@@ -17,6 +17,10 @@ Clone o repositório:
 ```bash
 git clone <repo_url>
 cd petly-api
+```
+Rode
+```bash
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 ```
 Instale dependências:
 ```bash

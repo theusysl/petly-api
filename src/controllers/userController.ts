@@ -1,10 +1,14 @@
+// src/controllers/userController.ts
+
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import pkg from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { generateToken } from "../utils/generateToken.js";
 
 const prisma = new PrismaClient();
+
 export default prisma;
+
 
 // Registrar usuário
 export const registerUser = async (req: Request, res: Response) => {
