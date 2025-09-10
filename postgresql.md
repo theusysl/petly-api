@@ -43,7 +43,7 @@ GRANT ALL PRIVILEGES ON DATABASE petly TO petly_user;
 
 No arquivo .env do projeto, coloque:
 
-DATABASE_URL="postgresql://postgres:1@localhost:5432/petly?schema=public"
+```DATABASE_URL="postgresql://postgres:1@localhost:5432/petly?schema=public"```
 
 ⚠️ Troque petly_pass pela senha real que você escolheu.
 ⚠️ Porta padrão é 5432. Se o PostgreSQL estiver em outra porta, ajuste.

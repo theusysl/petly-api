@@ -17,6 +17,64 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  pets             Pet[]             @relation("UserPets") // Pets cadastrados pelo usuário/ONG
+  adoptionRequests AdoptionRequest[] // Solicitações feitas pelo usuário
+  reports          Report[] // Denúncias feitas pelo usuário
+  events           Event[]           @relation("UserEvents") // Eventos organizados
+}
+
+model Pet {
+  id          Int       @id @default(autoincrement())
+  name        String
+  species     String // cachorro, gato, etc.
+  breed       String?
+  age         Int?
+  description String?
+  status      PetStatus @default(AVAILABLE) // Disponível, adotado, perdido, etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  ownerId Int
+  owner   User @relation("UserPets", fields: [ownerId], references: [id])
+
+  adoptionRequests AdoptionRequest[]
+}
+
+model AdoptionRequest {
+  id        Int           @id @default(autoincrement())
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  petId Int
+  pet   Pet @relation(fields: [petId], references: [id])
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  title     String
+  date      DateTime
+  location  String
+  details   String?
+  createdAt DateTime @default(now())
+
+  organizerId Int
+  organizer   User @relation("UserEvents", fields: [organizerId], references: [id])
+}
+
+model Report {
+  id        Int          @id @default(autoincrement())
+  type      ReportType
+  details   String
+  status    ReportStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 enum Role {
@@ -24,4 +82,28 @@ enum Role {
   ONG
   VET
   ADMIN
+}
+
+enum PetStatus {
+  AVAILABLE
+  ADOPTED
+  LOST
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportType {
+  MISTREATMENT
+  LOST_PET
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
 }

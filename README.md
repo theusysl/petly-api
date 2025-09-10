@@ -18,14 +18,19 @@ Clone o repositório:
 git clone <repo_url>
 cd petly-api
 ```
-Rode
+
+Rode:
+
 ```bash
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 ```
+
 Instale dependências:
+
 ```bash
 npm install
 ```
+
 Crie .env na raiz do projeto:
 
 ```ini
@@ -33,6 +38,7 @@ DATABASE_URL="postgresql://usuario:senha@localhost:5432/petly"
 JWT_SECRET="chave_super_secreta"
 PORT=4000
 ```
+
 Inicialize Prisma:
 
 ```bash
