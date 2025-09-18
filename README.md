@@ -31,13 +31,9 @@ Instale dependências:
 npm install
 ```
 
-Crie .env na raiz do projeto:
+---
 
-```ini
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/petly"
-JWT_SECRET="chave_super_secreta"
-PORT=4000
-```
+## 3. Configuração Prisma
 
 Inicialize Prisma:
 
@@ -46,101 +42,6 @@ npx prisma init
 ```
 
 Isso cria prisma/schema.prisma e aponta para o banco definido em DATABASE_URL.
-
-## 3. Configuração TypeScript / ESM
-
-No tsconfig.json:
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "NodeNext",
-    "rootDir": "src",
-    "outDir": "dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
-  }
-}
-```
-
-No package.json:
-```json
-{
-  "type": "module",
-  "scripts": {
-    "dev": "node --loader ts-node/esm src/index.ts",
-    "start": "node dist/index.js"
-  }
-}
-```
-
-## 4. Estrutura de Pastas Recomendada
-```pgsql
-Copiar código
-petly-api/
-├─ prisma/
-│  └─ schema.prisma
-├─ src/
-│  ├─ controllers/
-│  │  └─ userController.ts
-│  ├─ routes/
-│  │  └─ userRoutes.ts
-│  ├─ middlewares/
-│  ├─ services/
-│  └─ index.ts
-├─ package.json
-├─ tsconfig.json
-└─ .env
-```
-
-## 5. Inicializando o Servidor
-src/index.ts mínimo para teste:
-
-```ts
-import express from "express";
-import dotenv from "dotenv";
-dotenv.config();
-
-const app = express();
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.send("API Petly rodando!");
-});
-
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
-```
-
-Testar:
-
-```bash
-npm run dev
-```
-
-Abrir no navegador:
-
-```arduino
-http://localhost:4000/
-```
-
-## 6. Configuração Prisma
-Defina o modelo inicial no prisma/schema.prisma:
-
-```prisma
-model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
-  role     String @default("USER")
-}
-```
 
 Gere o Prisma Client:
 
@@ -154,66 +55,139 @@ Rode a migration inicial:
 npx prisma migrate dev --name init
 ```
 
-## 7. Importando Prisma no ESM
-```ts
-import pkg from "@prisma/client";
-const { PrismaClient } = pkg;
-const prisma = new PrismaClient();
-export default prisma;
+---
+
+## 4. Ajustar o .env
+
+Crie .env na raiz do projeto:
+
+```ini
+DATABASE_URL="postgresql://postgres:123@localhost:5432/petly?schema=public"
+JWT_SECRET="chave_super_secreta"
+PORT=4000
 ```
 
-⚠️ Sublinhados no VSCode podem aparecer, mas não quebram o runtime.
+### 4.1. No arquivo .env do projeto, coloque:
 
-## 8. Criando Rotas e Controllers
-src/routes/userRoutes.ts:
+⚠️ Troque 123 pela senha real que você escolheu.
+⚠️ Porta padrão é 5432. Se o PostgreSQL estiver em outra porta, ajuste.
 
-```ts
-import { Router } from "express";
-import { registerUser, loginUser } from "../controllers/userController.js";
+---
 
-const router = Router();
+## 5. Conectar ao servidor PostgreSQL
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+No lado esquerdo, você vai ver **Servers → botão direito → Create → Server**.
 
-export default router;
+###### Na aba General:
+
+- Name: Localhost (ou qualquer nome que você queira)
+
+###### Na aba Connection:
+
+  - Host: localhost
+  - Port: 5432
+  - Username: postgres (ou usuário que você criou)
+  - Password: senha que você definiu durante a instalação
+
+  Clica em **Save**
+
+Agora você tá conectado ao servidor local.
+
+---
+
+## 6. Criar o banco de dados
+
+No painel esquerdo, expande **Servers → seu servidor → Databases**
+
+Clique com o direito em **Databases → Create → Database**
+
+- Name: petly
+- Owner: postgres
+
+Clica **Save**
+
+Pronto, agora você tem o banco petly criado.
+
+### 6.1. Dicas importantes
+
+Não precisa mexer manualmente nas tabelas. Prisma faz isso pelas migrations.
+
+Dados de teste: você pode inserir via Prisma Client no Node.js ou via pgAdmin → clicando com o direito em uma tabela → View/Edit Data.
+
+Migração entre PCs: só precisa do .env e das migrations (prisma/migrations/) no repo.
+
+---
+
+## 7. Criar tabelas com Prisma
+
+No seu projeto, você já tem o **prisma/schema.prisma**.
+
+**Certifica que o .env está apontando pro banco petly**.
+
+No terminal do projeto:
+
+``` bash
+npx prisma migrate dev --name init
 ```
 
-src/controllers/userController.ts:
+Isso vai criar as tabelas automaticamente no banco petly.
 
-```ts
-import pkg from "@prisma/client";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+Você pode ver as tabelas no pgAdmin: **Servers → seu servidor → Databases → petly → Schemas → public → Tables**
 
-const { PrismaClient } = pkg;
-const prisma = new PrismaClient();
+---
 
-export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  try {
-    const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword }
-    });
-    res.json(user);
-  } catch (error) {
-    res.status(400).json({ error: "Email já existe" });
-  }
-};
+## 7.1. Testar Conexão
 
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return res.status(400).json({ error: "Usuário não encontrado" });
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(400).json({ error: "Senha inválida" });
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-  res.json({ token });
-};
+No terminal do projeto:
+
+```bash
+npx prisma db pull
 ```
 
-## 9. Próximos Passos
+Se conectar sem erro → **Prisma conseguiu falar com o PostgreSQL**.
+
+Se der erro **P1001** → o banco não está rodando. Abra o pgAdmin e confirme que o servidor PostgreSQL está "Started".
+
+---
+
+## 8. Resumo do Fluxo Sempre Que Trocar de Máquina
+
+Instalar PostgreSQL.
+
+Criar banco **petly**.
+
+Criar usuário + senha e dar acesso.
+
+Atualizar .env.
+
+Rodar:
+
+```bash
+npm install
+npx prisma generate
+npx prisma migrate dev
+```
+
+Pronto: API e banco funcionando!
+
+
+## 9. Inicializando o Servidor
+
+Testar:
+
+```bash
+npm run dev
+```
+
+Abrir no navegador:
+
+```arduino
+http://localhost:4000/
+```
+
+---
+
+## 10. Próximos Passos
 - Testar endpoints com Postman ou Insomnia.
 
 - Criar CRUD de Animais, Adoções, Denúncias usando o mesmo padrão.
@@ -224,7 +198,9 @@ export const loginUser = async (req, res) => {
 
 - Conectar ao frontend Next.js via fetch/axios.
 
-## 10. Dicas Gerais
+---
+
+## 11. Dicas Gerais
 Sempre que mudar schema.prisma:
 
 ```bash
@@ -238,14 +214,5 @@ Se mudar de máquina, rode sempre:
 npm install
 npx prisma generate
 ```
-
-Para ESM + TS, use sempre:
-
-```ts
-import pkg from "@prisma/client";
-const { PrismaClient } = pkg;
-```
-
-Console.log de objetos do Prisma podem aparecer como [Object: null prototype] → normal.
 
 ---

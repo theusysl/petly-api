@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,60 +8,53 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relacionamentos
-  pets             Pet[]             @relation("UserPets") // Pets cadastrados pelo usuário/ONG
-  adoptionRequests AdoptionRequest[] // Solicitações feitas pelo usuário
-  reports          Report[] // Denúncias feitas pelo usuário
-  events           Event[]           @relation("UserEvents") // Eventos organizados
+  id               Int               @id @default(autoincrement())
+  name             String
+  email            String            @unique
+  password         String
+  role             Role              @default(USER)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  adoptionRequests AdoptionRequest[]
+  events           Event[]           @relation("UserEvents")
+  pets             Pet[]             @relation("UserPets")
+  reports          Report[]
 }
 
 model Pet {
-  id          Int       @id @default(autoincrement())
-  name        String
-  species     String // cachorro, gato, etc.
-  breed       String?
-  age         Int?
-  description String?
-  status      PetStatus @default(AVAILABLE) // Disponível, adotado, perdido, etc.
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  ownerId Int
-  owner   User @relation("UserPets", fields: [ownerId], references: [id])
-
+  id               Int               @id @default(autoincrement())
+  name             String
+  species          String
+  breed            String?
+  age              Int?
+  description      String?
+  status           PetStatus         @default(AVAILABLE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  ownerId          Int
   adoptionRequests AdoptionRequest[]
+  owner            User              @relation("UserPets", fields: [ownerId], references: [id])
 }
 
 model AdoptionRequest {
   id        Int           @id @default(autoincrement())
   status    RequestStatus @default(PENDING)
   createdAt DateTime      @default(now())
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
-  petId Int
-  pet   Pet @relation(fields: [petId], references: [id])
+  userId    Int
+  petId     Int
+  pet       Pet           @relation(fields: [petId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
 }
 
 model Event {
-  id        Int      @id @default(autoincrement())
-  title     String
-  date      DateTime
-  location  String
-  details   String?
-  createdAt DateTime @default(now())
-
+  id          Int      @id @default(autoincrement())
+  title       String
+  date        DateTime
+  location    String
+  details     String?
+  createdAt   DateTime @default(now())
   organizerId Int
-  organizer   User @relation("UserEvents", fields: [organizerId], references: [id])
+  organizer   User     @relation("UserEvents", fields: [organizerId], references: [id])
 }
 
 model Report {
@@ -72,9 +63,8 @@ model Report {
   details   String
   status    ReportStatus @default(OPEN)
   createdAt DateTime     @default(now())
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
 }
 
 enum Role {
