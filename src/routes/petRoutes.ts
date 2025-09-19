@@ -1,6 +1,6 @@
 //src/routes/petRoutes.ts
 
-import express from "express";
+import { Router } from "express";
 import {
   createPet,
   getPets,
@@ -9,7 +9,7 @@ import {
   deletePet,
 } from "../controllers/petController.js";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/", createPet);
 router.get("/", getPets);

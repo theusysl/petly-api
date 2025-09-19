@@ -5,30 +5,50 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Criar Pet
+// Criar pet
 export const createPet = async (req: Request, res: Response) => {
-  const { name, species, breed, age, status, userId } = req.body;
+  const { name, species, breed, age, description, status, ownerId } = req.body;
 
   try {
+    // verifica se o dono existe
+    const owner = await prisma.user.findUnique({ where: { id: ownerId } });
+    if (!owner) {
+      return res.status(404).json({ message: "Usuário (owner) não encontrado" });
+    }
+
     const pet = await prisma.pet.create({
-      data: { name, species, breed, age, status, userId },
+      data: {
+        name,
+        species,
+        breed,
+        age,
+        description,
+        status, // deve ser AVAILABLE, ADOPTED ou LOST
+        ownerId,
+      },
     });
 
     res.status(201).json(pet);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Erro ao criar pet", error });
   }
 };
 
 // Listar todos os pets
-export const getPets = async (_req: Request, res: Response) => {
+export const getPets = async (req: Request, res: Response) => {
   try {
     const pets = await prisma.pet.findMany({
-      include: { owner: true }, // inclui dados do dono
+      include: {
+        owner: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
     });
+
     res.json(pets);
   } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar pets", error });
+    res.status(500).json({ message: "Erro ao listar pets", error });
   }
 };
 
@@ -39,10 +59,15 @@ export const getPetById = async (req: Request, res: Response) => {
   try {
     const pet = await prisma.pet.findUnique({
       where: { id: Number(id) },
-      include: { owner: true },
+      include: {
+        owner: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
     });
 
     if (!pet) return res.status(404).json({ message: "Pet não encontrado" });
+
     res.json(pet);
   } catch (error) {
     res.status(500).json({ message: "Erro ao buscar pet", error });
@@ -52,15 +77,15 @@ export const getPetById = async (req: Request, res: Response) => {
 // Atualizar pet
 export const updatePet = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, species, breed, age, status } = req.body;
+  const { name, species, breed, age, description, status } = req.body;
 
   try {
-    const pet = await prisma.pet.update({
+    const updatedPet = await prisma.pet.update({
       where: { id: Number(id) },
-      data: { name, species, breed, age, status },
+      data: { name, species, breed, age, description, status },
     });
 
-    res.json(pet);
+    res.json(updatedPet);
   } catch (error) {
     res.status(500).json({ message: "Erro ao atualizar pet", error });
   }
@@ -71,7 +96,10 @@ export const deletePet = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    await prisma.pet.delete({ where: { id: Number(id) } });
+    await prisma.pet.delete({
+      where: { id: Number(id) },
+    });
+
     res.json({ message: "Pet deletado com sucesso" });
   } catch (error) {
     res.status(500).json({ message: "Erro ao deletar pet", error });
