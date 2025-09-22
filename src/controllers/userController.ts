@@ -9,7 +9,8 @@ const prisma = new PrismaClient();
 
 // Registrar usuário
 export const registerUser = async (req: Request, res: Response) => {
-  const { name, email, password, role } = req.body;
+  // O campo 'role' não vem mais do body, garantindo a segurança.
+  const { name, email, password } = req.body;
 
   try {
     const userExists = await prisma.user.findUnique({ where: { email } });
@@ -18,7 +19,12 @@ export const registerUser = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role },
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        // O role será o padrão definido no schema: USER
+      },
     });
 
     res.status(201).json({

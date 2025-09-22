@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,35 +9,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- MODELS DE USUÁRIOS E AUTENTICAÇÃO ---
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  password    String
+  role        Role     @default(USER)
+  phone       String? // Campo adicionado
+  address     String? // Campo adicionado
+  reputation  Int      @default(0) // Campo adicionado
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relacionamentos
-  pets             Pet[]             @relation("UserPets")
-  adoptionRequests AdoptionRequest[]
-  reports          Report[]
-  events           Event[]           @relation("UserEvents")
+  pets              Pet[]
+  adoptionRequests  AdoptionRequest[]
+  reports           Report[]
+  eventsOrganized   Event[]
+  temporaryHome     TemporaryHome?
+  educationalContent EducationalContent[]
 }
 
+// --- MODELS PRINCIPAIS DA APLICAÇÃO ---
 model Pet {
-  id          Int       @id @default(autoincrement())
-  name        String
-  species     String
-  breed       String?
-  age         Int?
-  description String?
-  status      PetStatus @default(AVAILABLE)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            Int       @id @default(autoincrement())
+  name          String
+  species       String
+  breed         String?
+  age           Int?
+  sex           String?   // Campo adicionado
+  description   String?
+  photoUrl      String?   // Campo adicionado
+  latitude      Float?    // Campo adicionado
+  longitude     Float?    // Campo adicionado
+  status        PetStatus @default(AVAILABLE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  ownerId Int
-  owner   User @relation("UserPets", fields: [ownerId], references: [id], onDelete: Cascade)
+  // Relacionamento com o dono (usuário)
+  ownerId       Int
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   adoptionRequests AdoptionRequest[]
 }
@@ -44,37 +58,67 @@ model AdoptionRequest {
   id        Int           @id @default(autoincrement())
   status    RequestStatus @default(PENDING)
   createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  petId Int
-  pet   Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
-}
-
-model Event {
-  id        Int      @id @default(autoincrement())
-  title     String
-  date      DateTime
-  location  String
-  details   String?
-  createdAt DateTime @default(now())
-
-  organizerId Int
-  organizer   User @relation("UserEvents", fields: [organizerId], references: [id], onDelete: Cascade)
+  // Relacionamentos
+  userId    Int
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  petId     Int
+  pet       Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
 }
 
 model Report {
-  id        Int          @id @default(autoincrement())
-  type      ReportType
-  details   String
-  status    ReportStatus @default(OPEN)
-  createdAt DateTime     @default(now())
+  id          Int          @id @default(autoincrement())
+  description String
+  photoUrl    String?      // Campo adicionado
+  videoUrl    String?      // Campo adicionado
+  latitude    Float?       // Campo adicionado
+  longitude   Float?       // Campo adicionado
+  status      ReportStatus @default(OPEN)
+  createdAt   DateTime     @default(now())
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relacionamento opcional para denúncias anônimas
+  reporterId  Int?
+  reporter    User?        @relation(fields: [reporterId], references: [id], onDelete: SetNull)
 }
 
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  date        DateTime
+  location    String
+  createdAt   DateTime @default(now())
+
+  // Relacionamento com o organizador (usuário)
+  organizerId Int
+  organizer   User     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+}
+
+// --- NOVOS MODELS DA DOCUMENTAÇÃO ---
+model TemporaryHome {
+  id            Int     @id @default(autoincrement())
+  capacity      Int     // Quantos animais pode abrigar
+  observations  String?
+  isActive      Boolean @default(true)
+
+  // Relacionamento 1-para-1 com User
+  userId        Int     @unique
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EducationalContent {
+    id          Int      @id @default(autoincrement())
+    title       String
+    type        String   // "artigo", "video", "guia"
+    url         String
+    createdAt   DateTime @default(now())
+
+    authorId    Int
+    author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// --- ENUMS ---
 enum Role {
   USER
   ONG
@@ -86,18 +130,13 @@ enum PetStatus {
   AVAILABLE
   ADOPTED
   LOST
+  FOUND // Status adicionado
 }
 
 enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
-}
-
-enum ReportType {
-  MISTREATMENT
-  LOST_PET
-  OTHER
 }
 
 enum ReportStatus {

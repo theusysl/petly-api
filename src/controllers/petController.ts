@@ -1,7 +1,7 @@
 //src/controllers/petController.ts
 
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, PetStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -23,7 +23,7 @@ export const createPet = async (req: Request, res: Response) => {
         breed,
         age,
         description,
-        status, // deve ser AVAILABLE, ADOPTED ou LOST
+        status: status as PetStatus,
         ownerId,
       },
     });
@@ -78,11 +78,28 @@ export const getPetById = async (req: Request, res: Response) => {
 export const updatePet = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name, species, breed, age, description, status } = req.body;
+  const user = (req as any).user; // Pegamos o usuário logado
 
   try {
+    // 1. Buscamos o pet no banco
+    const pet = await prisma.pet.findUnique({
+      where: { id: Number(id) },
+    });
+
+    // 2. Verificamos se o pet existe
+    if (!pet) {
+      return res.status(404).json({ message: "Pet não encontrado" });
+    }
+
+    // 3. LÓGICA DE AUTORIZAÇÃO: Verificamos se o usuário é o dono ou um admin
+    if (pet.ownerId !== user.id && user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Acesso negado. Você não tem permissão para editar este pet." });
+    }
+
+    // 4. Se a autorização passar, atualizamos o pet
     const updatedPet = await prisma.pet.update({
       where: { id: Number(id) },
-      data: { name, species, breed, age, description, status },
+      data: { name, species, breed, age, description, status: status as PetStatus },
     });
 
     res.json(updatedPet);
@@ -94,8 +111,25 @@ export const updatePet = async (req: Request, res: Response) => {
 // Deletar pet
 export const deletePet = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const user = (req as any).user; // Pegamos o usuário logado
 
   try {
+    // 1. Buscamos o pet no banco
+    const pet = await prisma.pet.findUnique({
+      where: { id: Number(id) },
+    });
+
+    // 2. Verificamos se o pet existe
+    if (!pet) {
+      return res.status(404).json({ message: "Pet não encontrado" });
+    }
+
+    // 3. LÓGICA DE AUTORIZAÇÃO: Verificamos se o usuário é o dono ou um admin
+    if (pet.ownerId !== user.id && user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Acesso negado. Você não tem permissão para deletar este pet." });
+    }
+
+    // 4. Se a autorização passar, deletamos o pet
     await prisma.pet.delete({
       where: { id: Number(id) },
     });

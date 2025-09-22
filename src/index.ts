@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes.js";
 import petRoutes from "./routes/petRoutes.js";
 import adoptionRequestRoutes from "./routes/adoptionRequestRoutes.js";
+import eventRoutes from "./routes/eventRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/pets", petRoutes);
 app.use("/api/adoptions", adoptionRequestRoutes);
+app.use("/api/events", eventRoutes);
 
 app.get("/", (req, res) => {
   res.send("API Petly rodando 🚀");
