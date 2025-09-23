@@ -6,7 +6,8 @@ import {
     getAllEvents,
     getEventById,
     updateEvent,
-    deleteEvent
+    deleteEvent,
+    approveEvent
 } from "../controllers/eventController.js";
 import { protect, authorize } from "../middlewares/authMiddleware.js";
 
@@ -19,6 +20,7 @@ router.get("/:id", getEventById);
 // Rotas protegidas: apenas usuários logados (e futuramente com roles específicas) podem gerenciar eventos
 router.post("/", protect, createEvent);
 router.put("/:id", protect, updateEvent);
-router.delete("/:id", protect, authorize("ADMIN", "ONG"), deleteEvent); // Ex: Apenas Admin ou ONG podem deletar
+router.delete("/:id", protect, deleteEvent); // Ex: Apenas Admin ou ONG podem deletar
+router.patch("/:id/approve", protect, authorize("ADMIN"), approveEvent);
 
 export default router;

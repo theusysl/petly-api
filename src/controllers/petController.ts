@@ -7,32 +7,29 @@ const prisma = new PrismaClient();
 
 // Criar pet
 export const createPet = async (req: Request, res: Response) => {
-  const { name, species, breed, age, description, status, ownerId } = req.body;
+    // 1. Pega os dados do pet do body (sem ownerId)
+    const { name, species, breed, age, description, status } = req.body;
+    // 2. Pega o ID do usuário logado (dono) a partir do token
+    const ownerId = (req as any).user.id;
 
-  try {
-    // verifica se o dono existe
-    const owner = await prisma.user.findUnique({ where: { id: ownerId } });
-    if (!owner) {
-      return res.status(404).json({ message: "Usuário (owner) não encontrado" });
+    try {
+        const pet = await prisma.pet.create({
+            data: {
+                name,
+                species,
+                breed,
+                age,
+                description,
+                status: status as PetStatus,
+                ownerId, // 3. Usa o ID do token, que é seguro
+            },
+        });
+
+        res.status(201).json(pet);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao criar pet", error });
     }
-
-    const pet = await prisma.pet.create({
-      data: {
-        name,
-        species,
-        breed,
-        age,
-        description,
-        status: status as PetStatus,
-        ownerId,
-      },
-    });
-
-    res.status(201).json(pet);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Erro ao criar pet", error });
-  }
 };
 
 // Listar todos os pets

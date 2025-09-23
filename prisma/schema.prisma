@@ -89,6 +89,7 @@ model Event {
   date        DateTime
   location    String
   createdAt   DateTime @default(now())
+  status      EventStatus @default(PENDING)
 
   // Relacionamento com o organizador (usuário)
   organizerId Int
@@ -134,6 +135,12 @@ enum PetStatus {
 }
 
 enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EventStatus {
   PENDING
   APPROVED
   REJECTED

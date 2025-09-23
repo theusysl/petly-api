@@ -1,80 +1,19 @@
-# Petly API - Guia de Desenvolvimento
+# Petly API - Guia de Instalação e Desenvolvimento
+
+Bem-vindo à API do Petly! Este guia contém todos os passos necessários para configurar e rodar o projeto em um ambiente de desenvolvimento local.
 
 ## 1. Pré-requisitos
 
-- [Node.js >= 18](https://nodejs.org/pt/download)  
-- npm  
-- [PostgreSQL](https://www.postgresql.org/download/windows/)
-- VSCode ou outro editor de código  
-- Prisma (já instalado via npm)
+Antes de começar, garanta que você tenha os seguintes softwares instalados:
 
----
+- [Node.js](https://nodejs.org/) (versão 18 ou superior)
+- npm (geralmente instalado com o Node.js)
+- [PostgreSQL](https://www.postgresql.org/download/) (um servidor de banco de dados local)
+- Um cliente de banco de dados como [pgAdmin](https://www.pgadmin.org/) ou [DBeaver](https://dbeaver.io/) (Opcional, mas recomendado)
 
-## 2. Configuração Inicial
+## 2. Configuração do Banco de Dados
 
-Clone o repositório:
-
-```bash
-git clone <repo_url>
-cd petly-api
-```
-
-Rode:
-
-```bash
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
-```
-
-Instale dependências:
-
-```bash
-npm install
-```
-
----
-
-## 3. Configuração Prisma
-
-Inicialize Prisma:
-
-```bash
-npx prisma init
-```
-
-Isso cria prisma/schema.prisma e aponta para o banco definido em DATABASE_URL.
-
-Gere o Prisma Client:
-
-```bash
-npx prisma generate
-```
-
-Rode a migration inicial:
-
-```bash
-npx prisma migrate dev --name init
-```
-
----
-
-## 4. Ajustar o .env
-
-Crie .env na raiz do projeto:
-
-```ini
-DATABASE_URL="postgresql://postgres:123@localhost:5432/petly?schema=public"
-JWT_SECRET="chave_super_secreta"
-PORT=4000
-```
-
-### 4.1. No arquivo .env do projeto, coloque:
-
-⚠️ Troque 123 pela senha real que você escolheu.
-⚠️ Porta padrão é 5432. Se o PostgreSQL estiver em outra porta, ajuste.
-
----
-
-## 5. Conectar ao servidor PostgreSQL
+A API precisa de um banco de dados PostgreSQL para funcionar.
 
 No lado esquerdo, você vai ver **Servers → botão direito → Create → Server**.
 
@@ -93,10 +32,6 @@ No lado esquerdo, você vai ver **Servers → botão direito → Create → Serv
 
 Agora você tá conectado ao servidor local.
 
----
-
-## 6. Criar o banco de dados
-
 No painel esquerdo, expande **Servers → seu servidor → Databases**
 
 Clique com o direito em **Databases → Create → Database**
@@ -108,111 +43,76 @@ Clica **Save**
 
 Pronto, agora você tem o banco petly criado.
 
-### 6.1. Dicas importantes
+## 3. Configuração do Projeto
 
-Não precisa mexer manualmente nas tabelas. Prisma faz isso pelas migrations.
+0.  **Rode isso para poder usar o powershell dos pc da fatec**
+    ```bash
+    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+    ```
 
-Dados de teste: você pode inserir via Prisma Client no Node.js ou via pgAdmin → clicando com o direito em uma tabela → View/Edit Data.
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/theusysl/petly-api.git](https://github.com/theusysl/petly-api.git)
+    cd petly-api
+    ```
 
-Migração entre PCs: só precisa do .env e das migrations (prisma/migrations/) no repo.
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
 
----
+3.  **Configure as Variáveis de Ambiente:**
+    - Crie um arquivo chamado `.env` na raiz do projeto.
+    - Copie o conteúdo do arquivo `.env.example` (se existir) ou use o modelo abaixo e cole no seu `.env`:
 
-## 7. Criar tabelas com Prisma
+    ```ini
+    # Arquivo .env
 
-No seu projeto, você já tem o **prisma/schema.prisma**.
+    # Configuração do Banco de Dados
+    DATABASE_URL="postgresql://postgres:123@localhost:5432/petly?schema=public"
 
-**Certifica que o .env está apontando pro banco petly**.
+    # Chave secreta para os tokens JWT
+    JWT_SECRET="uma_chave_secreta_forte_e_diferente_desta"
 
-No terminal do projeto:
+    # Porta onde a API vai rodar
+    PORT=4000
+    ```
+    ⚠️ **Importante:** Altere `123` para as credenciais do seu banco de dados PostgreSQL.
 
-``` bash
-npx prisma migrate dev --name init
-```
+## 4. Rodando a Aplicação
 
-Isso vai criar as tabelas automaticamente no banco petly.
+Com tudo configurado, siga estes três passos finais:
 
-Você pode ver as tabelas no pgAdmin: **Servers → seu servidor → Databases → petly → Schemas → public → Tables**
+1.  **Aplique as Migrations:** Este comando vai criar todas as tabelas no seu banco `petly` com base no nosso schema.
+    ```bash
+    npx prisma migrate dev
+    ```
 
----
+2.  **Popule o Banco com Dados de Teste:** Este comando executa nosso script de seed para criar os usuários de teste (`USER`, `ONG`, `VET`, `ADMIN`).
+    ```bash
+    npx prisma db seed
+    ```
 
-## 7.1. Testar Conexão
+3.  **Inicie o Servidor de Desenvolvimento:**
+    ```bash
+    npm run dev
+    ```
 
-No terminal do projeto:
+🚀 Sua API Petly agora está rodando em `http://localhost:4000`.
 
-```bash
-npx prisma db pull
-```
+## Scripts Principais do Projeto
 
-Se conectar sem erro → **Prisma conseguiu falar com o PostgreSQL**.
+- `npm run dev`: Inicia o servidor em modo de desenvolvimento com hot-reload.
+- `npx prisma migrate dev`: Aplica novas migrações ao banco de dados.
+- `npx prisma generate`: Regenera o Prisma Client (geralmente automático, mas útil para forçar uma atualização).
+- `npx prisma db seed`: Popula o banco com os dados do arquivo `prisma/seed.ts`.
+- `npx prisma studio`: Abre uma interface web para visualizar e editar os dados do seu banco.
 
-Se der erro **P1001** → o banco não está rodando. Abra o pgAdmin e confirme que o servidor PostgreSQL está "Started".
+## Próximos Passos da Fase 2
 
----
+Com a Fase 1 da API concluída, os próximos grandes módulos a serem desenvolvidos são:
 
-## 8. Resumo do Fluxo Sempre Que Trocar de Máquina
-
-Instalar PostgreSQL.
-
-Criar banco **petly**.
-
-Criar usuário + senha e dar acesso.
-
-Atualizar .env.
-
-Rodar:
-
-```bash
-npm install
-npx prisma generate
-npx prisma migrate dev
-```
-
-Pronto: API e banco funcionando!
-
-
-## 9. Inicializando o Servidor
-
-Testar:
-
-```bash
-npm run dev
-```
-
-Abrir no navegador:
-
-```arduino
-http://localhost:4000/
-```
-
----
-
-## 10. Próximos Passos
-- Testar endpoints com Postman ou Insomnia.
-
-- Criar CRUD de Animais, Adoções, Denúncias usando o mesmo padrão.
-
-- Adicionar middlewares de autenticação com JWT.
-
-- Implementar tratamento de erros centralizado.
-
-- Conectar ao frontend Next.js via fetch/axios.
-
----
-
-## 11. Dicas Gerais
-Sempre que mudar schema.prisma:
-
-```bash
-npx prisma generate
-npx prisma migrate dev --name <nome_migration>
-```
-
-Se mudar de máquina, rode sempre:
-
-```bash
-npm install
-npx prisma generate
-```
-
----
+- **Lares Temporários:** Sistema para voluntários se cadastrarem para abrigar animais.
+- **Área Educacional:** CRUD para artigos e vídeos sobre cuidados com pets.
+- **Refinamento dos Perfis:** Adicionar mais detalhes aos perfis de `ONG` e `VET`.
+- **Conexão com o Frontend:** Integrar a API com a aplicação Next.js.

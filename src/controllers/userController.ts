@@ -94,19 +94,37 @@ export const getUserById = async (req: Request, res: Response) => {
 
 // Atualizar usuário
 export const updateUser = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { name, email, role } = req.body;
+    const { id } = req.params;
+    const { name, email, role } = req.body;
+    const loggedInUser = (req as any).user;
 
-  try {
-    const user = await prisma.user.update({
-      where: { id: Number(id) },
-      data: { name, email, role },
-    });
+    // Regra de Segurança: Apenas um ADMIN pode alterar o 'role' de um usuário.
+    if (role && loggedInUser.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Você não tem permissão para alterar perfis de usuário." });
+    }
 
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Erro ao atualizar usuário", error });
-  }
+    // Regra de Segurança: Um usuário só pode editar a si mesmo, a menos que seja admin.
+    if (loggedInUser.id !== Number(id) && loggedInUser.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Você só pode editar seu próprio perfil." });
+    }
+
+    try {
+        const dataToUpdate: { name?: string; email?: string; role?: any } = { name, email };
+
+        // Apenas adiciona o 'role' ao objeto de atualização se o usuário for um admin
+        if (role && loggedInUser.role === 'ADMIN') {
+            dataToUpdate.role = role;
+        }
+
+        const user = await prisma.user.update({
+            where: { id: Number(id) },
+            data: dataToUpdate,
+        });
+
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao atualizar usuário", error });
+    }
 };
 
 // Deletar usuário
