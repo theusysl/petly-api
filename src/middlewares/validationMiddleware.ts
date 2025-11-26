@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from "express";
 import { ZodError, z } from "zod";
 
 export const validate =
-  (schema: z.Schema) => // <-- TROCA FEITA AQUI
+  (schema: z.Schema) =>
   (req: Request, res: Response, next: NextFunction) => {
     try {
       schema.parse({
@@ -15,13 +15,19 @@ export const validate =
       return next();
     } catch (error) {
       if (error instanceof ZodError) {
-        // Extrai a primeira mensagem de erro mais legível
-        const firstError = error.errors[0];
-        const field = firstError.path.join(".");
+        const zodError = error as any;
+
+        const firstIssue = zodError.errors[0];
+        const message = firstIssue ? firstIssue.message : "Erro de validação";
+
+        const formattedErrors = zodError.errors.map((issue: any) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        }));
+
         return res.status(400).json({
-          message: firstError.message || "Erro de validação",
-          field: field,
-          errors: error.format(),
+          message: message,
+          errors: formattedErrors,
         });
       }
       return res.status(500).json({ message: "Erro interno do servidor" });
