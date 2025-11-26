@@ -15,8 +15,12 @@ export const validate =
       return next();
     } catch (error) {
       if (error instanceof ZodError) {
+        // Extrai a primeira mensagem de erro mais legível
+        const firstError = error.errors[0];
+        const field = firstError.path.join(".");
         return res.status(400).json({
-          message: "Erro de validação",
+          message: firstError.message || "Erro de validação",
+          field: field,
           errors: error.format(),
         });
       }
