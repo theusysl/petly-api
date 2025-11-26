@@ -31,8 +31,9 @@ const app = express();
 // Isso vai permitir que qualquer origem se conecte. Para produção, podemos restringir.
 app.use(cors()); 
 
-// Middleware para parsear JSON
-app.use(express.json());
+// Middleware para parsear JSON com limite aumentado para imagens base64
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rotas
 app.use("/uploads", express.static(path.resolve(__dirname, "..", "uploads")));
