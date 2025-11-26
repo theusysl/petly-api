@@ -8,17 +8,41 @@ import {
   updatePet,
   deletePet,
 } from "../controllers/petController.js";
-import { protect, authorize } from "../middlewares/authMiddleware.js"; // Importar
+import { protect } from "../middlewares/authMiddleware.js";
+import { validate } from "../middlewares/validationMiddleware.js"; // Seu middleware
+import { 
+  createPetSchema, 
+  updatePetSchema, 
+  petIdSchema 
+} from "../validations/petValidations.js"; // Novos schemas
 
 const router = Router();
 
-// Rotas públicas (qualquer um pode ver os pets)
+// Rotas públicas
 router.get("/", getPets);
-router.get("/:id", getPetById);
+// Validamos se o ID é número antes de chamar o controller
+router.get("/:id", validate(petIdSchema), getPetById);
 
-// Rotas protegidas (apenas usuários logados podem criar/editar/deletar)
-router.post("/", protect, createPet);
-router.put("/:id", protect, updatePet); // Adicionaremos mais lógica de permissão aqui depois
-router.delete("/:id", protect, deletePet); // E aqui também
+// Rotas protegidas
+router.post(
+  "/", 
+  protect, 
+  validate(createPetSchema), // Valida o body completo
+  createPet
+);
+
+router.put(
+  "/:id", 
+  protect, 
+  validate(updatePetSchema), // Valida params.id E body parcial
+  updatePet
+);
+
+router.delete(
+  "/:id", 
+  protect, 
+  validate(petIdSchema), // Valida apenas params.id
+  deletePet
+);
 
 export default router;

@@ -29,6 +29,7 @@ model User {
   eventsOrganized   Event[]
   temporaryHome     TemporaryHome?
   educationalContent EducationalContent[]
+  partnerProfile PartnerProfile?
 }
 
 // --- MODELS PRINCIPAIS DA APLICAÇÃO ---
@@ -96,7 +97,6 @@ model Event {
   organizer   User     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 }
 
-// --- NOVOS MODELS DA DOCUMENTAÇÃO ---
 model TemporaryHome {
   id            Int     @id @default(autoincrement())
   capacity      Int     // Quantos animais pode abrigar
@@ -117,6 +117,21 @@ model EducationalContent {
 
     authorId    Int
     author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model PartnerProfile {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique // 1-para-1
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  cnpj         String?  // Opcional pois veterinário autônomo pode usar CPF
+  website      String?
+  pixKey       String?  // Chave Pix para doações
+  description  String?  // "Sobre nós"
+  openingHours String?  // Ex: "Seg-Sex 08h-18h"
+  services     String?  // Ex: "Castração, Vacinação, Banho"
+  
+  updatedAt    DateTime @updatedAt
 }
 
 // --- ENUMS ---

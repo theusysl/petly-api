@@ -1,5 +1,3 @@
-// src/routes/adoptionRequestRoutes.ts
-
 import { Router } from "express";
 import {
   createAdoptionRequest,
@@ -7,18 +5,39 @@ import {
   updateAdoptionRequestStatus,
   deleteAdoptionRequest,
 } from "../controllers/adoptionRequestController.js";
-import { protect, authorize } from "../middlewares/authMiddleware.js"; // Importar authorize
+import { protect, authorize } from "../middlewares/authMiddleware.js";
+import { validate } from "../middlewares/validationMiddleware.js"; // Importar
+import { 
+  createAdoptionSchema, 
+  updateAdoptionStatusSchema, 
+  adoptionIdSchema 
+} from "../validations/adoptionRequestValidations.js"; // Importar schemas
 
 const router = Router();
 
-// Todas as rotas de adoção precisam de autenticação
 router.use(protect);
 
-router.post("/", createAdoptionRequest);
-router.patch("/:id", updateAdoptionRequestStatus);
-router.delete("/:id", deleteAdoptionRequest);
+// Validar criação
+router.post(
+  "/", 
+  validate(createAdoptionSchema), 
+  createAdoptionRequest
+);
 
-// Apenas ADMIN e ONG podem ver todas as solicitações
+// Validar atualização de status
+router.patch(
+  "/:id", 
+  validate(updateAdoptionStatusSchema), 
+  updateAdoptionRequestStatus
+);
+
+// Validar ID na deleção
+router.delete(
+  "/:id", 
+  validate(adoptionIdSchema), 
+  deleteAdoptionRequest
+);
+
 router.get("/", authorize("ADMIN", "ONG"), getAllAdoptionRequests);
 
 export default router;
