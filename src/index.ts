@@ -28,8 +28,17 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 const app = express();
 
-// Isso vai permitir que qualquer origem se conecte. Para produção, podemos restringir.
-app.use(cors()); 
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    credentials: true,
+  })
+);
 
 // Middleware para parsear JSON com limite aumentado para imagens base64
 app.use(express.json({ limit: '10mb' }));

@@ -7,15 +7,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Iniciando o seed...');
 
-  // 1. Deleta dados existentes para começar do zero
-  await prisma.user.deleteMany({});
-  
   // 2. Criação de usuários com diferentes roles
   const hashedPassword = await bcrypt.hash('123', 10);
 
-  // Usuário Comum
-  const userComum = await prisma.user.create({
-    data: {
+  // Cria os usuários se ainda não existirem; se existirem, mantém os dados.
+  const userComum = await prisma.user.upsert({
+    where: { email: 'user@email.com' },
+    update: {},
+    create: {
       name: 'Usuario Comum',
       email: 'user@email.com',
       password: hashedPassword,
@@ -23,9 +22,10 @@ async function main() {
     },
   });
 
-  // Usuário ONG
-  const userOng = await prisma.user.create({
-    data: {
+  const userOng = await prisma.user.upsert({
+    where: { email: 'ong@email.com' },
+    update: {},
+    create: {
       name: 'ONG Petly',
       email: 'ong@email.com',
       password: hashedPassword,
@@ -33,9 +33,10 @@ async function main() {
     },
   });
 
-  // Usuário Veterinário
-  const userVet = await prisma.user.create({
-    data: {
+  const userVet = await prisma.user.upsert({
+    where: { email: 'vet@email.com' },
+    update: {},
+    create: {
       name: 'Veterinário',
       email: 'vet@email.com',
       password: hashedPassword,
@@ -43,9 +44,10 @@ async function main() {
     },
   });
 
-  // Usuário Admin
-  const userAdmin = await prisma.user.create({
-    data: {
+  const userAdmin = await prisma.user.upsert({
+    where: { email: 'admin@email.com' },
+    update: {},
+    create: {
       name: 'Administrador',
       email: 'admin@email.com',
       password: hashedPassword,

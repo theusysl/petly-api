@@ -14,7 +14,10 @@ router.post("/", upload.single("file"), (req: Request, res: Response) => {
     return res.status(400).json({ message: "Nenhum arquivo enviado ou formato inválido." });
   }
 
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  const publicBaseUrl = process.env.PUBLIC_BASE_URL?.replace(/\/$/, "");
+  const fileUrl = publicBaseUrl
+    ? `${publicBaseUrl}/uploads/${req.file.filename}`
+    : `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
 
   res.status(201).json({ 
     message: "Upload realizado com sucesso!",

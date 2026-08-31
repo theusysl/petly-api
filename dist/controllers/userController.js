@@ -1,0 +1,124 @@
+// src/controllers/userController.ts
+import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
+import { generateToken } from "../utils/generateToken.js";
+const prisma = new PrismaClient();
+// Registrar usuário
+export const registerUser = async (req, res) => {
+    // O campo 'role' não vem mais do body, garantindo a segurança.
+    const { name, email, password } = req.body;
+    try {
+        const userExists = await prisma.user.findUnique({ where: { email } });
+        if (userExists)
+            return res.status(400).json({ message: "Usuário já existe" });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await prisma.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                // O role será o padrão definido no schema: USER
+            },
+        });
+        res.status(201).json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user.id, user.role),
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Erro no servidor", error });
+    }
+};
+// Login usuário
+export const loginUser = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user)
+            return res.status(400).json({ message: "Credenciais inválidas" });
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid)
+            return res.status(400).json({ message: "Credenciais inválidas" });
+        res.json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user.id, user.role),
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Erro no servidor", error });
+    }
+};
+// Listar todos os usuários
+export const getUsers = async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: { id: true, name: true, email: true, role: true, createdAt: true, updatedAt: true },
+        });
+        res.json(users);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Erro ao buscar usuários", error });
+    }
+};
+// Buscar usuário por ID
+export const getUserById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: Number(id) },
+            select: { id: true, name: true, email: true, role: true, createdAt: true, updatedAt: true },
+        });
+        if (!user)
+            return res.status(404).json({ message: "Usuário não encontrado" });
+        res.json(user);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Erro ao buscar usuário", error });
+    }
+};
+// Atualizar usuário
+export const updateUser = async (req, res) => {
+    const { id } = req.params;
+    const { name, email, role } = req.body;
+    const loggedInUser = req.user;
+    // Regra de Segurança: Apenas um ADMIN pode alterar o 'role' de um usuário.
+    if (role && loggedInUser.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Você não tem permissão para alterar perfis de usuário." });
+    }
+    // Regra de Segurança: Um usuário só pode editar a si mesmo, a menos que seja admin.
+    if (loggedInUser.id !== Number(id) && loggedInUser.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Você só pode editar seu próprio perfil." });
+    }
+    try {
+        const dataToUpdate = { name, email };
+        // Apenas adiciona o 'role' ao objeto de atualização se o usuário for um admin
+        if (role && loggedInUser.role === 'ADMIN') {
+            dataToUpdate.role = role;
+        }
+        const user = await prisma.user.update({
+            where: { id: Number(id) },
+            data: dataToUpdate,
+        });
+        res.json(user);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Erro ao atualizar usuário", error });
+    }
+};
+// Deletar usuário
+export const deleteUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.user.delete({ where: { id: Number(id) } });
+        res.json({ message: "Usuário deletado com sucesso" });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Erro ao deletar usuário", error });
+    }
+};
