@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 // Criar um novo evento
 export const createEvent = async (req, res) => {
     // 1. Pega os dados do corpo da requisição
-    const { title, description, date, location } = req.body;
+    const { title, description, date, location, address, photoUrl, latitude, longitude } = req.body;
     // 2. Pega o ID do usuário logado (organizador) a partir do token
     const user = req.user;
     // 3. Validação básica para garantir que os campos obrigatórios foram enviados
@@ -25,6 +25,10 @@ export const createEvent = async (req, res) => {
                 description,
                 date: new Date(date),
                 location,
+                address,
+                photoUrl,
+                latitude,
+                longitude,
                 organizerId: user.id,
                 status: status,
             },
@@ -108,7 +112,7 @@ export const getEventById = async (req, res) => {
 export const updateEvent = async (req, res) => {
     const { id } = req.params; // ID do evento a ser atualizado
     const user = req.user; // Usuário logado que está fazendo a requisição
-    const { title, description, date, location } = req.body; // Novos dados para o evento
+    const { title, description, date, location, address, photoUrl, latitude, longitude } = req.body; // Novos dados para o evento
     try {
         // 1. Busca o evento original no banco
         const eventToUpdate = await prisma.event.findUnique({
@@ -134,6 +138,10 @@ export const updateEvent = async (req, res) => {
                 description,
                 date: new Date(date),
                 location,
+                address,
+                photoUrl,
+                latitude,
+                longitude,
             },
         });
         res.status(200).json(updatedEvent);

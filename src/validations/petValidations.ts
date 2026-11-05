@@ -12,7 +12,7 @@ export const createPetSchema = z.object({
     age: z.number().min(0),
     description: z.string().optional(),
     status: z.enum(STATUS_VALUES),
-    photoUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+    photoUrl: z.string().refine((value) => value === "" || value.startsWith("data:image/") || /^https?:\/\//.test(value), "Imagem inválida").optional(),
     latitude: z.number().optional(),
     longitude: z.number().optional(),
   }),

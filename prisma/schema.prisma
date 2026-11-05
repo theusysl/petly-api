@@ -89,6 +89,10 @@ model Event {
   description String
   date        DateTime
   location    String
+  address     String?
+  photoUrl    String?
+  latitude    Float?
+  longitude   Float?
   createdAt   DateTime @default(now())
   status      EventStatus @default(PENDING)
 
