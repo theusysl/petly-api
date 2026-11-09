@@ -64,18 +64,17 @@ export const createReport = async (req: Request, res: Response) => {
 
 // Obter todas as denúncias (apenas para admins)
 export const getAllReports = async (req: Request, res: Response) => {
-  // Lógica para listar as denúncias virá aqui
-  res.status(501).json({ message: "Rota não implementada" });
+  try { const reports = await prisma.report.findMany({ orderBy: { createdAt: "desc" } }); res.json(reports); } catch (error) { res.status(500).json({ message: "Erro ao buscar denúncias.", error }); }
 };
 
 // Obter uma denúncia por ID (apenas para admins)
 export const getReportById = async (req: Request, res: Response) => {
-  // Lógica para buscar uma denúncia virá aqui
-  res.status(501).json({ message: "Rota não implementada" });
+  try { const report = await prisma.report.findUnique({ where: { id: Number(req.params.id) } }); if (!report) return res.status(404).json({ message: "Denúncia não encontrada." }); res.json(report); } catch (error) { res.status(500).json({ message: "Erro ao buscar denúncia.", error }); }
 };
 
 // Atualizar o status de uma denúncia (apenas para admins)
 export const updateReportStatus = async (req: Request, res: Response) => {
-  // Lógica para atualizar o status da denúncia virá aqui
-  res.status(501).json({ message: "Rota não implementada" });
+  const { status } = req.body;
+  if (!["OPEN", "IN_PROGRESS", "RESOLVED"].includes(status)) return res.status(400).json({ message: "Status inválido." });
+  try { const report = await prisma.report.update({ where: { id: Number(req.params.id) }, data: { status } }); res.json(report); } catch (error) { res.status(500).json({ message: "Erro ao atualizar denúncia.", error }); }
 };

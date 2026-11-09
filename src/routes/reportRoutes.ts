@@ -15,7 +15,7 @@ const router = Router();
 router.post("/", createReport);
 
 // A partir daqui, todas as rotas exigem autenticação de ADMIN
-router.use(protect, authorize("ADMIN"));
+router.use(protect, authorize("ADMIN", "ONG", "VET"));
 
 router.get("/", getAllReports);
 router.get("/:id", getReportById);

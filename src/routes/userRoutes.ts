@@ -23,6 +23,6 @@ router.post("/login", validate(loginUserSchema), loginUser);
 router.get("/", protect, authorize("ADMIN"), getUsers);
 router.get("/:id", protect, getUserById);
 router.put("/:id", protect, updateUser);
-router.delete("/:id", protect, authorize("ADMIN"), deleteUser);
+router.delete("/:id", protect, deleteUser);
 
 export default router;
