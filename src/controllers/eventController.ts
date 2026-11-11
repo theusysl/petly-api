@@ -83,6 +83,13 @@ export const getAllEvents = async (req: Request, res: Response) => {
   }
 };
 
+export const getPendingEvents = async (req: Request, res: Response) => {
+  try {
+    const events = await prisma.event.findMany({ where: { status: "PENDING" }, orderBy: { createdAt: "asc" }, include: { organizer: { select: { id: true, name: true, email: true, role: true } } } });
+    res.status(200).json(events);
+  } catch (error) { res.status(500).json({ message: "Erro ao listar eventos pendentes.", error }); }
+};
+
 // Obter um evento por ID
 export const getEventById = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -235,4 +242,13 @@ export const approveEvent = async (req: Request, res: Response) => {
     console.error("Erro ao aprovar evento:", error);
     res.status(500).json({ message: "Erro interno ao aprovar o evento." });
   }
+};
+
+export const moderateEvent = async (req: Request, res: Response) => {
+  const { status } = req.body;
+  if (!["APPROVED", "REJECTED"].includes(status)) return res.status(400).json({ message: "Status inválido." });
+  try {
+    const event = await prisma.event.update({ where: { id: Number(req.params.id) }, data: { status } });
+    res.status(200).json(event);
+  } catch (error) { res.status(500).json({ message: "Erro ao atualizar o evento.", error }); }
 };

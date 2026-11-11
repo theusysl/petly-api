@@ -5,7 +5,9 @@ import {
   getEventById,
   updateEvent,
   deleteEvent,
-  approveEvent
+  approveEvent,
+  getPendingEvents,
+  moderateEvent
 } from "../controllers/eventController.js";
 import { protect, authorize } from "../middlewares/authMiddleware.js";
 import { validate } from "../middlewares/validationMiddleware.js"; // Importar
@@ -16,6 +18,10 @@ import {
 } from "../validations/eventValidations.js"; // Importar schemas
 
 const router = Router();
+
+router.get("/moderation/pending", protect, authorize("ADMIN"), getPendingEvents);
+
+router.patch("/:id/moderation", protect, authorize("ADMIN"), validate(eventIdSchema), moderateEvent);
 
 router.get("/", getAllEvents);
 
